@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Comparator for sorting intervals by start time
+int compare(const void *a, const void *b) {
+    int *x = (int *)a;
+    int *y = (int *)b;
+    return x[0] - y[0];
+}
+
+// Min Heap functions
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void heapifyUp(int heap[], int index) {
+    while (index > 0 && heap[(index - 1) / 2] > heap[index]) {
+        swap(&heap[(index - 1) / 2], &heap[index]);
+        index = (index - 1) / 2;
+    }
+}
+
+void heapifyDown(int heap[], int size, int index) {
+    int smallest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
+
+    if (left < size && heap[left] < heap[smallest])
+        smallest = left;
+
+    if (right < size && heap[right] < heap[smallest])
+        smallest = right;
+
+    if (smallest != index) {
+        swap(&heap[index], &heap[smallest]);
+        heapifyDown(heap, size, smallest);
+    }
+}
+
+int main() {
+    int n;
+
+    printf("Enter number of meetings: ");
+    scanf("%d", &n);
+
+    int intervals[n][2];
+
+    printf("Enter start and end times:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d %d", &intervals[i][0], &intervals[i][1]);
+    }
+
+    // Step 1: Sort by start time
+    qsort(intervals, n, sizeof(intervals[0]), compare);
+
+    // Min heap for end times
+    int heap[n];
+    int size = 0;
+
+    // Add first meeting
+    heap[size++] = intervals[0][1];
+
+    // Process remaining meetings
+    for (int i = 1; i < n; i++) {
+        // If earliest ending meeting is done
+        if (intervals[i][0] >= heap[0]) {
+            heap[0] = intervals[i][1];
+            heapifyDown(heap, size, 0);
+        } else {
+            // Need new room
+            heap[size] = intervals[i][1];
+            heapifyUp(heap, size);
+            size++;
+        }
+    }
+
+    printf("Minimum rooms required: %d\n", size);
+
+    return 0;
+}
